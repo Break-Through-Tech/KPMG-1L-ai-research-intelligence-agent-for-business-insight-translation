@@ -11,7 +11,7 @@
 | Name             | GitHub Handle | Contribution                                                             |
 |------------------|---------------|--------------------------------------------------------------------------|
 | Brando Budhan    | @  | WIP            |
-| Arushi Agarwal   | @     | WIP  |
+| Arushi Agarwal   | @arushi-a1    | WIP  |
 | Michelle Hong     | @seashello  | WIP                 |
 
 ---
