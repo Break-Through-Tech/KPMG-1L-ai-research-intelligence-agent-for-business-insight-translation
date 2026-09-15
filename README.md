@@ -10,7 +10,7 @@
 
 | Name             | GitHub Handle | Contribution                                                             |
 |------------------|---------------|--------------------------------------------------------------------------|
-| Brando Budhan    | @  | WIP            |
+| Brando Budhan    | @Bran7astic  | WIP            |
 | Arushi Agarwal   | @arushi-a1    | WIP  |
 | Michelle Hong     | @seashello  | WIP                 |
 
