@@ -1,20 +1,14 @@
-name: base
+name: KPMG_1L
 channels:
+  - conda-forge
   - defaults
 dependencies:
-  - python=3.14
-  - conda=26.7.2
-  - setuptools
+  - numpy
+  - ipykernel
+  - pypdf
+  - pandas
+  - python=3.11
   - pip
-  - wheel
-  - conda-anaconda-telemetry[version='>=0.3.0']
-  - conda-anaconda-tos[version='>=0.2.2']
-  - conda-content-trust
-  - conda-libmamba-solver
-  - menuinst
-  - python.app
-  - anaconda-anon-usage
-  - anaconda-channel-guide
-  - anaconda-auth[version='>=0.15.1']
-  - langchain-core
-prefix: /opt/miniconda3
+  - sentence-transformers
+  - langchain-huggingface
+prefix: /opt/miniconda3/envs/KPMG_1L

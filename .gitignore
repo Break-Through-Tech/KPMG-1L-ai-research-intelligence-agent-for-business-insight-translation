@@ -1,1 +1,20 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Environment variables and secrets
 .env
+
+# Conda and virtual environments
+.venv/
+venv/
+env/
+
+# Local Chroma database
+chroma_db/
+
+# macOS-generated files
+.DS_Store
+
+# Jupyter checkpoints
+.ipynb_checkpoints/

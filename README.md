@@ -64,12 +64,22 @@ Before installing, ensure you have the following tools installed:
     conda install <package name>
     conda env export --from-history > environment.yml
     ```
-4. To use modules from the conda environment in a `.ipynb` jupyter notebook file:
+4. Everytime you pull new code, update your conda environment by running
+    ```
+    conda activate KPMG_1L
+
+    conda env update \
+    --file environment.yml \
+    --prune
+    ```
+
+5. To use modules from the conda environment in a `.ipynb` jupyter notebook file:
     1. Open your `.ipynb` file in VS Code.
     2. Look at the top-right corner of the notebook window and click on Select Kernel (or click the existing kernel name if one is already selected).
     3. In the dropdown palette that opens, choose Python Environments...
     4. Select your specific Conda environment from the list. It should look something like: 
     `KPMG_1L (Python 3.14.7)`
+
 ---
 
 ## 🏗️ **Project Overview**
