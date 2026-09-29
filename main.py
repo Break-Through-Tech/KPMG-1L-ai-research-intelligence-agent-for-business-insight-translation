@@ -14,4 +14,4 @@ print(len(chunks))
 
 # Only run when storing new documents
 #store_documents(chunks)
-print(retrieve_document(query="I want to learn about unlearning balanced score", k=1))
+print(retrieve_document(query=input("Enter Query: "), k=1))
