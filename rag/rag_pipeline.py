@@ -65,6 +65,7 @@ def retrieve_document(query: str, k: int=1):
         embedding_function = get_embedding_client(),
         persist_directory = PERSIST_DIR,
         create_collection_if_not_exists=False,
+        relevance_score_fn=lambda distance: 1.0 - (distance / 2.0)
     )
 
     return vector_store.similarity_search_with_relevance_scores(

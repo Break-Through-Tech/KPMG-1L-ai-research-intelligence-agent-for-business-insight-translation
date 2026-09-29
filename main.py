@@ -13,5 +13,5 @@ print(type(chunks))
 print(len(chunks))
 
 # Only run when storing new documents
-store_documents(chunks)
-#print(retrieve_document(query=input("Enter Query: "), k=1))
+#store_documents(chunks)
+print(retrieve_document(query=input("Enter Query: "), k=1))
