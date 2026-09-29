@@ -29,13 +29,54 @@
 
 ## 👩🏽‍💻 **Setup and Installation**
 
-**Provide step-by-step instructions so someone else can run your code and reproduce your results. Depending on your setup, include:**
+<!-- **Provide step-by-step instructions so someone else can run your code and reproduce your results. Depending on your setup, include:**
 
 * How to clone the repository
 * How to install dependencies
 * How to set up the environment
 * How to access the dataset(s)
-* How to run the notebook or scripts
+* How to run the notebook or scripts -->
+
+Before installing, ensure you have the following tools installed: 
+* **Conda:** https://www.anaconda.com/download/success?reg=auth
+
+---
+1. Clone the repository to your machine by running
+
+    ```
+    git clone https://github.com/Break-Through-Tech/KPMG-1L-ai-research-intelligence-agent-for-business-insight-translation.git
+    ```
+    ```
+    cd KPMG-1L-ai-research-intelligence-agent-for-business-insight-translation
+    ```
+
+2. Create and activate Conda environment from environment.yml by running 
+    ```
+    conda env create -f environment.yml
+    ```
+    ```
+    conda activate KPMG_1L
+    ```
+
+3. To install new packages:
+
+    ```
+    conda install <package name>
+    conda env export --from-history > environment.yml
+    ```
+4. Everytime you pull new code, update your conda environment by running
+    ```
+    conda activate KPMG_1L
+
+    conda env update --file environment.yml --prune
+    ```
+
+5. To use modules from the conda environment in a `.ipynb` jupyter notebook file:
+    1. Open your `.ipynb` file in VS Code.
+    2. Look at the top-right corner of the notebook window and click on Select Kernel (or click the existing kernel name if one is already selected).
+    3. In the dropdown palette that opens, choose Python Environments...
+    4. Select your specific Conda environment from the list. It should look something like: 
+    `KPMG_1L (Python 3.14.7)`
 
 ---
 
