@@ -1,0 +1,18 @@
+name: KPMG_clean
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pandas
+  - numpy
+  - langchain-huggingface
+  - sentence-transformers
+  - ipykernel
+  - pypdf
+  - langchain-text-splitters
+  - chromadb
+  - langchain-chroma
+  - opentelemetry-exporter-otlp-proto-grpc[version='>=1.43']
+  - opentelemetry-proto[version='>=1.43']
