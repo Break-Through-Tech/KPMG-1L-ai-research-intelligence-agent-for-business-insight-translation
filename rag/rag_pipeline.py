@@ -67,7 +67,9 @@ def retrieve_document(query: str, k: int=1):
         create_collection_if_not_exists=False,
     )
 
-    return vector_store.similarity_search(
+    return vector_store.similarity_search_with_relevance_scores(
         query=query,
         k=k
     )
+
+
