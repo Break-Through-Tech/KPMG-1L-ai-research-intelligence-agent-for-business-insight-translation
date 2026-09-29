@@ -68,9 +68,7 @@ Before installing, ensure you have the following tools installed:
     ```
     conda activate KPMG_1L
 
-    conda env update \
-    --file environment.yml \
-    --prune
+    conda env update --file environment.yml --prune
     ```
 
 5. To use modules from the conda environment in a `.ipynb` jupyter notebook file:
