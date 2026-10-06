@@ -1,0 +1,20 @@
+name: KPMG_1L
+channels:
+  - defaults
+dependencies:
+  - pypdf
+  - python=3.11
+  - pandas
+  - numpy
+  - ipykernel
+  - pip
+  - sentence-transformers
+  - langchain-huggingface
+  - pytorch[version='>=2.5']
+  - chromadb
+  - langchain-text-splitters
+  - opentelemetry-proto[version='>=1.43']
+  - opentelemetry-exporter-otlp-proto-grpc[version='>=1.43']
+  - langchain-chroma
+  - libsqlite
+  - sqlite
