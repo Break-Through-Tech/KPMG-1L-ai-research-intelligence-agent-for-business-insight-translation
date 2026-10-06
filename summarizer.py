@@ -1,6 +1,6 @@
 """Gemini helpers: rewrite a question into arXiv search queries, and summarize retrieved chunks.
 
-Needs GEMINI_API_KEY in your .env / environment. Model name is configurable via GEMINI_MODEL.
+Needs GEMINI_API_KEY in .env / environment. Model name is configurable via GEMINI_MODEL.
 """
 import json
 import os
