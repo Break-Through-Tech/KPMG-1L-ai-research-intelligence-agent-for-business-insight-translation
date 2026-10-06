@@ -18,6 +18,7 @@ print(len(chunks))
 
 query = input("Enter Query: ")
 results = retrieve_document(query=query, k=1)
+print(f"Retrieval Results: {results}", end="\n")
 print(answer_with_summary(query, results))
 
 
