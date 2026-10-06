@@ -19,5 +19,5 @@ dependencies:
   - libsqlite
   - sqlite
   - python-dotenv
-  - pip:
-      - google-genai
+  - google-genai
+      

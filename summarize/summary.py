@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 from google import genai
-
 from ingestion.pdf_parser import extract_pdf
 
 load_dotenv()
