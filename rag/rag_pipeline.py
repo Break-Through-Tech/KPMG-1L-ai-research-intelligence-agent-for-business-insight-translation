@@ -4,6 +4,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from dotenv import load_dotenv
 from pathlib import Path
+from functools import lru_cache
 import time
 
 
@@ -52,21 +53,26 @@ def store_documents(documents: list[Document]) -> Chroma:
     return vector_store
 
 
-def retrieve_document(query: str, k: int=1):
-    
+# Cached so repeated queries reuse one embedding model and Chroma client
+@lru_cache(maxsize=1)
+def get_vector_store() -> Chroma:
     if not PERSIST_DIR.exists():
         raise FileNotFoundError(
             "Vector database not found. "
             "Run store_documents() first."
         )
 
-    vector_store = Chroma(
+    return Chroma(
         collection_name=COLLECTION_NAME,
         embedding_function = get_embedding_client(),
         persist_directory = PERSIST_DIR,
         create_collection_if_not_exists=False,
         relevance_score_fn=lambda distance: 1.0 - (distance / 2.0)
     )
+
+
+def retrieve_document(query: str, k: int=1):
+    vector_store = get_vector_store()
 
     return vector_store.similarity_search_with_relevance_scores(
         query=query,
