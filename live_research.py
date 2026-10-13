@@ -4,8 +4,8 @@ question -> Gemini query variants -> arXiv search -> re-rank abstracts -> downlo
 -> parse/chunk/store ONLY papers not already in Chroma -> retrieve ONLY from this question's
 papers -> Gemini summary with sources.
 
-Reuses your code: extract_pdf, chunk_documents, store_documents, get_embedding_client and the
-Chroma settings (PERSIST_DIR, COLLECTION_NAME). Nothing in your existing files is modified.
+Reuses existing code: extract_pdf, chunk_documents, store_documents, get_embedding_client and the
+Chroma settings (PERSIST_DIR, COLLECTION_NAME).
 """
 import numpy as np
 from langchain_chroma import Chroma
