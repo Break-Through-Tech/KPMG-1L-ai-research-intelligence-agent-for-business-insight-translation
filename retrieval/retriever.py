@@ -71,12 +71,9 @@ def get_vector_store() -> Chroma:
     )
 
 
-def retrieve_document(query: str, k: int=1):
+def get_retriever(k: int=1):
     vector_store = get_vector_store()
 
-    return vector_store.similarity_search_with_relevance_scores(
-        query=query,
-        k=k
-    )
+    return vector_store.as_retriever(search_kwargs={"k": 1})
 
 

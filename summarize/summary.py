@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from google import genai
 from ingestion.pdf_parser import extract_pdf
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv("API_KEY"))
@@ -46,3 +47,10 @@ Respond in two parts:
 
     response = client.models.generate_content(model=MODEL, contents=prompt)
     return response.text
+
+
+def get_llm_summarizer(model=MODEL):
+    return ChatGoogleGenerativeAI(
+        model=model,
+        temperature=0
+    )

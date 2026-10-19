@@ -1,23 +1,26 @@
 name: KPMG_1L
 channels:
+  - conda-forge
   - defaults
 dependencies:
-  - pypdf
-  - python=3.11
-  - pandas
-  - numpy
-  - ipykernel
-  - pip
-  - sentence-transformers
-  - langchain-huggingface
-  - pytorch[version='>=2.5']
-  - chromadb
-  - langchain-text-splitters
   - opentelemetry-proto[version='>=1.43']
-  - opentelemetry-exporter-otlp-proto-grpc[version='>=1.43']
-  - langchain-chroma
+  - pandas
+  - python=3.11
   - libsqlite
   - sqlite
-  - python-dotenv
+  - numpy
+  - ipykernel
+  - chromadb
+  - langchain-chroma
+  - opentelemetry-exporter-otlp-proto-grpc[version='>=1.43']
+  - pypdf
+  - pip
+  - pytorch[version='>=2.5']
+  - langchain-huggingface
+  - sentence-transformers
+  - langchain-text-splitters
   - google-genai
-      
+  - python-dotenv
+  - langchain-core
+  - langchain-google-genai
+prefix: /opt/miniconda3/envs/KPMG_1L
