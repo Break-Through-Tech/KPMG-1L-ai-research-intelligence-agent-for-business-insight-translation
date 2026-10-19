@@ -1,7 +1,7 @@
 from ingestion.pdf_parser import extract_all_pdfs
 from ingestion.chunker import chunk_documents
 from rag.rag_pipeline import store_documents, retrieve_document
-from summarize.summary import answer_with_summary
+import json
 
 
 documents = extract_all_pdfs('data')
@@ -14,12 +14,7 @@ print(type(chunks))
 print(len(chunks))
 
 # Only run when storing new documents
-# store_documents(chunks)
+#store_documents(chunks)
+result = retrieve_document(query=input("Enter Query: "), k=1)
 
-query = input("Enter Query: ")
-results = retrieve_document(query=query, k=1)
-print(f"Retrieval Results: {results}", end="\n")
-print(answer_with_summary(query, results))
-
-
-
+print(json.dumps(result[0][0].metadata, indent=4))
