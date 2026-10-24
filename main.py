@@ -45,5 +45,10 @@ rag_chain = (
     | StrOutputParser()
 )
 
-response = rag_chain.invoke(input("Enter Query: "))
-print(response)
+# # Response all at once
+# response = rag_chain.invoke(input("Enter Query: "))
+# print(response)
+
+# Streamed response
+for chunk in rag_chain.stream(input("Enter Query: ")):
+    print(chunk, end="", flush=True)

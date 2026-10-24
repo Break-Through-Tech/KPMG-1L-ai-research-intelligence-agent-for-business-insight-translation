@@ -52,5 +52,6 @@ Respond in two parts:
 def get_llm_summarizer(model=MODEL):
     return ChatGoogleGenerativeAI(
         model=model,
-        temperature=0
+        temperature=0,
+        api_key = os.getenv("API_KEY")
     )

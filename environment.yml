@@ -23,4 +23,3 @@ dependencies:
   - python-dotenv
   - langchain-core
   - langchain-google-genai
-prefix: /opt/miniconda3/envs/KPMG_1L
