@@ -10,8 +10,9 @@ __pycache__/
 venv/
 env/
 
-# Local Chroma database
+# Local Chroma database / stored data
 chroma_db/
+data/arxiv/
 
 # macOS-generated files
 .DS_Store
