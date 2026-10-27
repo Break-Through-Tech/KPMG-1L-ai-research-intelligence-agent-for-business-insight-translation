@@ -9,9 +9,13 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from rag.rag_pipeline import get_embedding_client, paper_is_stored, retrieve_document, store_documents
+from ingestion.chunker import chunk_documents
+from ingestion.pdf_parser import extract_pdf
 
 import numpy as np
 import requests
+
 
 API_URL = "https://export.arxiv.org/api/query"
 HEADERS = {"User-Agent": "kpmg-research-rag/0.1 (contact: michellehongx@gmail.com)"}  # edit 
@@ -142,3 +146,30 @@ def download_pdf(paper: Paper) -> Path:
     r.raise_for_status()
     path.write_bytes(r.content)
     return path
+
+def find_and_store(query: str) -> Paper:
+    # 1. Find the one best paper on arXiv for this question
+    candidates = search_arxiv(query)
+    ranked = rank_papers(query, candidates, get_embedding_client())
+    if not ranked or ranked[0][1] < MIN_SCORE:
+        print(f"No sufficiently relevant arXiv paper found ({len(candidates)} candidates screened).")
+        raise SystemExit
+    paper, score = ranked[0]
+    print(f"✅ Selected: {paper.title} (arXiv:{paper.arxiv_id}, similarity {score:.2f}, "
+        f"picked from {len(candidates)} candidates)")
+
+    # 2. Download it, then reuse the existing parse -> chunk -> store steps (only the first time)
+    pdf_path = download_pdf(paper)
+    if not paper_is_stored(paper.arxiv_id):
+        chunks = chunk_documents(extract_pdf(pdf_path))
+        for chunk in chunks:  # extra metadata so results can be cited
+            chunk.metadata.update({
+                "title": paper.title,
+                "authors": ", ".join(paper.authors[:6]),
+                "published": paper.published,
+                "abs_url": paper.abs_url,
+            })
+        store_documents(chunks)
+        print(f"✅ Stored {len(chunks)} chunks")
+
+    return paper
