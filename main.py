@@ -1,60 +1,19 @@
-from ingestion.pdf_parser import extract_all_pdfs
-from ingestion.chunker import chunk_documents
-from retrieval.retriever import store_documents, get_retriever
-from summarize.summary import get_llm_summarizer
-
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
-import json
-
-from ingestion.arxiv_client import MIN_SCORE, download_pdf, rank_papers, search_arxiv, find_and_store
-from ingestion.chunker import chunk_documents
-from ingestion.pdf_parser import extract_pdf
-from rag.rag_pipeline import get_embedding_client, paper_is_stored, retrieve_document, store_documents
-from summarize.summary import answer_with_summary
+from rag.chain import respond_to_query
 
 
-# documents = extract_all_pdfs('data')
-# print("✅ Extracted all documents")
-
-# chunks = chunk_documents(documents)
-# print("✅ Completed Chunking")
-# print(type(chunks))
-
-# print(len(chunks))
-
-# Only run when storing new documents
-#store_documents(chunks)
-
-retriever = get_retriever()
-
-# Temporary prompt, we can change later
-prompt = ChatPromptTemplate.from_template("""
-You are an expert AI Engineering consultant for KPMG. Answer the following question using the provided context. Relate your findings from the context into a
-business insight for KPMG. Explain concepts assuming you're speaking to a non-technical audience. 
-
-Context: 
-{context}
-
-Question: 
-{question}
-"""
-)
-
-llm = get_llm_summarizer()
-
-rag_chain = (
-    {"context": retriever, "question": RunnablePassthrough()}
-    | prompt
-    | llm
-    | StrOutputParser()
-)
 
 # # Response all at once
 # response = rag_chain.invoke(input("Enter Query: "))
 # print(response)
 
 # Streamed response
-for chunk in rag_chain.stream(input("Enter Query: ")):
-    print(chunk, end="", flush=True)
+for chunk in respond_to_query(input("Enter Query: ")):
+
+    if chunk["type"] == "status":
+        print(f"💭 {chunk['message']}")
+
+    elif chunk["type"] == "chunk":
+        print(chunk["content"], end="", flush=True)
+
+    elif chunk["type"] == "done":
+        print("\n✅ All done!")

@@ -75,7 +75,7 @@ def get_vector_store() -> Chroma:
 def get_retriever(k: int=1):
     vector_store = get_vector_store()
 
-    return vector_store.as_retriever(search_kwargs={"k": 1})
+    return vector_store.as_retriever(search_kwargs={"k": k})
 
 def paper_is_stored(document_id: str) -> bool:
     try:
