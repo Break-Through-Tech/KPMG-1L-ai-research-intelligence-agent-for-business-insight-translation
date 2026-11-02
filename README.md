@@ -79,6 +79,21 @@ Before installing, ensure you have the following tools installed:
     `KPMG_1L (Python 3.14.7)`
 
 ---
+## 💻 Running the Backend
+
+While in the `backend/` directory, to start the server, run: 
+
+```
+uvicorn main:app --reload
+```
+
+As a sample query, you can run in a separate terminal:
+```
+curl -N -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is the Pandora's Box Problem?"}'
+```
+
 
 ## 🏗️ **Project Overview**
 
