@@ -1,6 +1,7 @@
 name: KPMG_1L
 channels:
   - defaults
+  - conda-forge  # langchain-chroma, google-genai aren't on defaults
 dependencies:
   - pypdf
   - python=3.11
@@ -18,3 +19,5 @@ dependencies:
   - langchain-chroma
   - libsqlite
   - sqlite
+  - python-dotenv
+  - google-genai

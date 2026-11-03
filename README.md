@@ -78,6 +78,28 @@ Before installing, ensure you have the following tools installed:
     4. Select your specific Conda environment from the list. It should look something like: 
     `KPMG_1L (Python 3.14.7)`
 
+6. Add a Gemini API key. Create a file named `.env` in the project root (it's gitignored, never commit it):
+    ```
+    API_KEY=your-key-here
+    ```
+    Free keys: https://aistudio.google.com/apikey
+
+### Running the evaluator
+
+`evaluate.py` scores the pipeline end to end on the 75 labeled questions in `evaluation/threshold_queries.json` (50 answerable, 25 that should be refused).
+
+```
+python evaluate.py --no-judge --limit 10    # quick check (~1 min)
+python evaluate.py --no-judge               # all 75, retrieval + refusal + format checks (~5 min)
+python evaluate.py                          # adds the LLM judge: faithfulness, relevance, business usefulness (~10-15 min)
+python evaluate.py --mode live --days 100   # real arXiv flow instead of the fixed data/ papers
+```
+
+- **Corpus mode (default)** uses the 5 PDFs in `data/`, so results are repeatable. Use it to compare changes.
+- **Live mode** searches arXiv, so results change over time. Treat it as a smoke test.
+- Per-question results go to `eval_results.json`. The terminal shows which checks fail most often, which is where to look first.
+- The free Gemini tier allows ~15 requests/minute; the code waits and retries automatically.
+
 ---
 
 ## 🏗️ **Project Overview**
