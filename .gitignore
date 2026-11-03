@@ -18,6 +18,7 @@ chroma_db/
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
-# Evaluator output and live-mode PDF cache
+# Evaluator output, live-mode PDF cache, and the log of real questions asked
 eval_results.json
 pdf_cache/
+logs/

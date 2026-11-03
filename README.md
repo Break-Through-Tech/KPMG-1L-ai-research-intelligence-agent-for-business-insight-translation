@@ -100,6 +100,18 @@ python evaluate.py --mode live               # real arXiv flow (last 180 days) i
 - Per-question results go to `eval_results.json`. The terminal shows which checks fail most often, which is where to look first.
 - The free Gemini tier allows ~15 requests/minute; the code waits and retries automatically.
 
+### Asking questions (live) and grading real usage
+
+```
+python live_research.py             # ask questions in a loop; blank line to quit
+python live_research.py --no-grade  # skip the auto-check (faster, one fewer Gemini call)
+python evaluate.py --report-log     # summarize every question asked so far
+```
+
+Real questions have no known correct paper, so the question bank can't score them. Instead, each answer gets an **auto-check** right after it's shown: is every claim backed by the papers (faithful), does it answer the question, how useful is it for a business reader (1-5), and are all citations real. Every question, answer, set of papers and check result is saved to `logs/live_questions.jsonl` (gitignored, one file per person).
+
+`--report-log` prints overall rates, lists answers the judge flagged for a human look, and lists refusals with the reason, so you can check they were right to refuse. It also grades any questions that were asked with `--no-grade`.
+
 ---
 
 ## 🏗️ **Project Overview**

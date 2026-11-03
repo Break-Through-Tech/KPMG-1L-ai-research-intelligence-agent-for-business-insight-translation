@@ -8,8 +8,16 @@ Reuses existing code: extract_pdf, chunk_documents, store_documents, get_embeddi
 Chroma settings (PERSIST_DIR, COLLECTION_NAME).
 
 run()    -> structured dict (used by evaluate.py)
-answer() -> just the text (used interactively)
+answer() -> just the text
+
+`python live_research.py` asks questions in a loop; each answer is auto-checked (faithful,
+relevant, business usefulness, real citations) and logged to logs/live_questions.jsonl.
+`python evaluate.py --report-log` summarizes that log.
 """
+import argparse
+import json
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -85,7 +93,7 @@ def run(question: str, days: int = DEFAULT_DAYS, top_papers: int = 3, k_chunks: 
         min_score: float = MIN_PAPER_SCORE) -> dict:
     """Full live flow. Returns everything the evaluator needs, not just the text."""
     out = {"queries": [], "papers": [], "results": [], "blocks": [],
-           "answer": "", "abstained": False}
+           "answer": "", "abstained": False, "abstain_reason": None}
 
     embeddings = get_embedding_client()  # load MiniLM once and reuse it everywhere below
     embed_fn = lambda texts: np.array(embeddings.embed_documents(texts))
@@ -97,13 +105,13 @@ def run(question: str, days: int = DEFAULT_DAYS, top_papers: int = 3, k_chunks: 
                          top_k=top_papers, embed_fn=embed_fn)
     out["papers"] = papers
     if not papers:
-        out.update(abstained=True, answer="No recent arXiv papers matched. "
+        out.update(abstained=True, abstain_reason="no_papers", answer="No recent arXiv papers matched. "
                    "Try a wider date window or different wording.")
         return out
     for p in papers:
         print(f"  {p.score:.2f}  {p.arxiv_id}  {p.title}")
     if papers[0].score < min_score:
-        out.update(abstained=True, answer=(
+        out.update(abstained=True, abstain_reason="low_paper_score", answer=(
             f"No sufficiently relevant papers found (best match {papers[0].score:.2f} "
             f"< {min_score:.2f}), so I can't answer this from recent research."))
         return out
@@ -117,12 +125,12 @@ def run(question: str, days: int = DEFAULT_DAYS, top_papers: int = 3, k_chunks: 
     results, blocks, summary = retrieve_and_summarize(question, store, ids, titles, k_chunks)
     out.update(results=results, blocks=blocks)
     if not results:
-        out.update(abstained=True,
+        out.update(abstained=True, abstain_reason="no_text",
                    answer="Papers were found but no readable text could be retrieved from them.")
         return out
 
     if is_no_answer(summary):
-        out.update(abstained=True, answer=REFUSAL)
+        out.update(abstained=True, abstain_reason="insufficient_evidence", answer=REFUSAL)
         return out
 
     sources = "\n".join(f"- {p.title} (https://arxiv.org/abs/{p.arxiv_id})" for p in papers)
@@ -134,5 +142,85 @@ def answer(question: str, **kwargs) -> str:
     return run(question, **kwargs)["answer"]
 
 
+# ---------------- live grading + logging ----------------
+# Real user questions have no "correct paper" label, so the question bank in evaluate.py can't
+# score them. These checks need no label: faithfulness, relevance, business usefulness (LLM
+# judge), made-up citations and format. Every question is appended to the log so the team (and
+# KPMG reviewers) can look back at real usage; `python evaluate.py --report-log` summarizes it.
+LOG_PATH = Path(__file__).resolve().parent / "logs" / "live_questions.jsonl"
+
+
+def _grade(question: str, paper_ids: list[str], blocks: list[str], answer_text: str,
+           abstained: bool) -> dict:
+    """Label-free checks on one live answer. Reuses evaluate.py's checks so scores match."""
+    from evaluate import cited_ids_not_retrieved, format_ok, judge, norm
+
+    grades = {"hallucinated_ids": cited_ids_not_retrieved(answer_text, {norm(i) for i in paper_ids})}
+    if abstained:
+        return grades  # nothing to judge; the log keeps abstain_reason
+    grades["format_ok"] = format_ok(answer_text)
+    grades.update(judge(question, blocks, answer_text))
+    return grades
+
+
+def grade(question: str, out: dict) -> dict:
+    return _grade(question, [p.arxiv_id for p in out["papers"]], out["blocks"],
+                  out["answer"], out["abstained"])
+
+
+def grade_record(r: dict) -> dict:
+    """Same checks on an entry read back from the log (used by evaluate.py --report-log)."""
+    return _grade(r["question"], [p["arxiv_id"] for p in r["papers"]], r["blocks"],
+                  r["answer"], r["abstained"])
+
+
+def log_question(question: str, out: dict, latency_s: float, grades: dict | None) -> None:
+    record = {
+        "asked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "question": question,
+        "search_queries": out["queries"],
+        "papers": [{"arxiv_id": p.arxiv_id, "title": p.title, "score": round(p.score, 3)}
+                   for p in out["papers"]],
+        "abstained": out["abstained"],
+        "abstain_reason": out["abstain_reason"],
+        "answer": out["answer"],
+        "blocks": out["blocks"],     # kept so the answer can be (re)graded later
+        "latency_s": latency_s,
+        "grades": grades,            # None if run with --no-grade
+    }
+    LOG_PATH.parent.mkdir(exist_ok=True)
+    with LOG_PATH.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record) + "\n")
+
+
+def print_grades(grades: dict) -> None:
+    tick = lambda ok: "yes" if ok else "NO"
+    parts = [f"citations real: {tick(not grades['hallucinated_ids'])}"]
+    if "faithful" in grades:
+        parts = [f"faithful: {tick(grades['faithful'])}",
+                 f"answers question: {tick(grades['relevant'])}",
+                 f"business usefulness: {grades['business_useful']}/5"] + parts
+    print("\n--- Auto-check: " + " | ".join(parts))
+    if grades.get("reason"):
+        print(f"    judge: {grades['reason']}")
+
+
 if __name__ == "__main__":
-    print(answer(input("Enter Query: ")))
+    ap = argparse.ArgumentParser(description="Ask research questions; each is graded and logged.")
+    ap.add_argument("--no-grade", action="store_true",
+                    help="skip the auto-check (saves one Gemini call per question)")
+    args = ap.parse_args()
+
+    while True:
+        q = input("\nEnter Query (blank to quit): ").strip()
+        if not q:
+            break
+        t0 = time.time()
+        out = run(q)
+        latency = round(time.time() - t0, 1)
+        print(f"\n{out['answer']}")
+        grades = None if args.no_grade else grade(q, out)
+        if grades:
+            print_grades(grades)
+        log_question(q, out, latency, grades)
+        print("(logged to logs/live_questions.jsonl)")

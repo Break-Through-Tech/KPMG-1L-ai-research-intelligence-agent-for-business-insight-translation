@@ -5,6 +5,7 @@ Usage:
   python evaluate.py --mode live                       # live arXiv pipeline (live_research.run), last 180 days
   python evaluate.py --no-judge --limit 10             # quick, cheap smoke run
   python evaluate.py --category business --category near_miss
+  python evaluate.py --report-log                      # summarize real questions asked via live_research.py
 
 Modes
   corpus  Retrieve from the fixed PDFs in data/ (ingested into Chroma on first run). Reproducible:
@@ -342,6 +343,53 @@ def summarize_results(results: list[dict]) -> tuple[float, float]:
     return pos_rate, neg_rate
 
 
+def report_log(path: Path) -> None:
+    """Summarize real questions logged by live_research.py. These have no correct-paper label, so
+    only label-free checks apply. Entries logged with --no-grade are graded now and saved back."""
+    from live_research import grade_record
+
+    records = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    if not records:
+        sys.exit(f"{path} is empty")
+    ungraded = [r for r in records if r.get("grades") is None]
+    for r in ungraded:
+        print(f"grading: {r['question'][:70]}")
+        r["grades"] = grade_record(r)
+    if ungraded:
+        path.write_text("".join(json.dumps(r) + "\n" for r in records), encoding="utf-8")
+
+    answered = [r for r in records if not r["abstained"]]
+    refused = [r for r in records if r["abstained"]]
+    judged = [r for r in answered if "faithful" in r["grades"]]
+    pct = lambda k, rs: f"{sum(bool(r['grades'].get(k)) for r in rs) / len(rs):.0%}" if rs else "n/a"
+
+    print(f"\n===== LIVE QUESTIONS ({path}) =====")
+    print(f"  questions logged:       {len(records)}")
+    print(f"  answered:               {len(answered)}")
+    print(f"  refused:                {len(refused)}")
+    for reason in sorted({r['abstain_reason'] for r in refused}, key=str):
+        print(f"    - {reason}: {sum(r['abstain_reason'] == reason for r in refused)}")
+    if judged:
+        print(f"  faithful:               {pct('faithful', judged)}   (claims backed by the papers)")
+        print(f"  answers the question:   {pct('relevant', judged)}")
+        print(f"  mean business useful:   {mean(r['grades']['business_useful'] for r in judged):.1f} / 5")
+        print(f"  correct format:         {pct('format_ok', judged)}")
+    bad = [r for r in records if r["grades"].get("hallucinated_ids")]
+    print(f"  made-up citations:      {len(bad)} answer(s)")
+    print(f"  mean latency:           {mean(r['latency_s'] for r in records):.1f}s")
+
+    flagged = [r for r in judged if not (r["grades"]["faithful"] and r["grades"]["relevant"])] + bad
+    if flagged:
+        print("\nWorth a human look (judge flagged, or invented a citation):")
+        for r in flagged:
+            print(f"  - {r['question'][:80]}\n      {r['grades'].get('reason', '')}")
+    if refused:
+        print("\nRefused (check these were right to refuse):")
+        for r in refused:
+            top = r["papers"][0]["score"] if r["papers"] else None
+            print(f"  - [{r['abstain_reason']}, best paper {top}] {r['question'][:80]}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("eval_set", nargs="?", default=str(DEFAULT_EVAL_SET))
@@ -353,6 +401,8 @@ def main():
     ap.add_argument("--category", action="append", help="only run these categories (repeatable)")
     ap.add_argument("--limit", type=int, help="only run the first N items (after filtering)")
     ap.add_argument("--out", default="eval_results.json")
+    ap.add_argument("--report-log", nargs="?", const=str(ROOT / "logs" / "live_questions.jsonl"),
+                    metavar="PATH", help="summarize questions logged by live_research.py, then exit")
     args = ap.parse_args()
 
     import os
@@ -361,6 +411,10 @@ def main():
     if not (os.getenv("GEMINI_API_KEY") or os.getenv("API_KEY")):
         sys.exit("No Gemini key: add API_KEY=... (or GEMINI_API_KEY=...) to .env in the project root "
                  "(needed for summaries even with --no-judge).")
+
+    if args.report_log:
+        report_log(Path(args.report_log))
+        return
 
     items = load_items(Path(args.eval_set))
     if args.category:
