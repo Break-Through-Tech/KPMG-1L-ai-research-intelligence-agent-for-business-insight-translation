@@ -24,6 +24,11 @@ STOPWORDS = {
     "can", "be", "that", "this", "it", "as", "at", "recent", "latest", "papers",
 }
 
+# AI papers about LLMs are often filed under cs.CL (language) or cs.LG (machine learning) rather
+# than cs.AI, so searching cs.AI alone misses many of them.
+DEFAULT_CATEGORIES = ("cs.AI", "cs.CL", "cs.LG")
+DEFAULT_DAYS = 180  # ~6 months: recent enough to be "current research", wide enough to find matches
+
 _last_call = 0.0
 
 
@@ -57,9 +62,9 @@ def _keywords(query: str) -> list[str]:
     return out[:8]
 
 
-def search_arxiv(query: str, category: str = "cs.AI", days: int = 30,
+def search_arxiv(query: str, category=DEFAULT_CATEGORIES, days: int = DEFAULT_DAYS,
                  max_results: int = 50) -> list[Paper]:
-    """Keyword search restricted to a category and a recent date window."""
+    """Keyword search restricted to one or more categories and a recent date window."""
     words = _keywords(query)
     if not words:
         return []
@@ -67,7 +72,8 @@ def search_arxiv(query: str, category: str = "cs.AI", days: int = 30,
     start = (now - timedelta(days=days)).strftime("%Y%m%d0000")
     end = now.strftime("%Y%m%d2359")
     terms = " OR ".join(f"all:{w}" for w in words)
-    search = f"cat:{category} AND ({terms}) AND submittedDate:[{start} TO {end}]"
+    cats = " OR ".join(f"cat:{c}" for c in ([category] if isinstance(category, str) else category))
+    search = f"({cats}) AND ({terms}) AND submittedDate:[{start} TO {end}]"
 
     _throttle()
     resp = requests.get(
@@ -135,7 +141,7 @@ def download_pdf(paper: Paper) -> Path:
 
 
 def find_papers(question: str, query_variants: Optional[list[str]] = None,
-                category: str = "cs.AI", days: int = 30, top_k: int = 3,
+                category=DEFAULT_CATEGORIES, days: int = DEFAULT_DAYS, top_k: int = 3,
                 embed_fn: Callable[[list[str]], np.ndarray] = default_embed) -> list[Paper]:
     """Full flow: search (one or more query phrasings) -> dedupe -> re-rank -> download top_k."""
     candidates: dict[str, Paper] = {}

@@ -2,7 +2,7 @@
 
 Usage:
   python evaluate.py                                   # corpus mode, evaluation/threshold_queries.json
-  python evaluate.py --mode live --days 120            # live arXiv pipeline (live_research.run)
+  python evaluate.py --mode live                       # live arXiv pipeline (live_research.run), last 180 days
   python evaluate.py --no-judge --limit 10             # quick, cheap smoke run
   python evaluate.py --category business --category near_miss
 
@@ -346,7 +346,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("eval_set", nargs="?", default=str(DEFAULT_EVAL_SET))
     ap.add_argument("--mode", choices=["corpus", "live"], default="corpus")
-    ap.add_argument("--days", type=int, default=30, help="live mode: arXiv search window")
+    ap.add_argument("--days", type=int, default=180, help="live mode: arXiv search window (matches live_research)")
     ap.add_argument("--min-chunk-score", type=float, default=CORPUS_MIN_CHUNK_SCORE,
                     help="corpus mode: abstain below this top chunk score")
     ap.add_argument("--no-judge", action="store_true", help="skip LLM judge (gates G4-G5 pass trivially)")

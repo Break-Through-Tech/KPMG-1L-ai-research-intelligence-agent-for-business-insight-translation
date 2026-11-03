@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 from langchain_chroma import Chroma
 
-from arxiv_search import find_papers
+from arxiv_search import DEFAULT_DAYS, find_papers
 from ingestion.chunker import chunk_documents
 from ingestion.pdf_parser import extract_pdf
 from rag.rag_pipeline import (
@@ -81,7 +81,7 @@ def retrieve_and_summarize(question: str, store: Chroma, doc_ids: list[str],
     return results, blocks, summarize(question, blocks)
 
 
-def run(question: str, days: int = 30, top_papers: int = 3, k_chunks: int = 5,
+def run(question: str, days: int = DEFAULT_DAYS, top_papers: int = 3, k_chunks: int = 5,
         min_score: float = MIN_PAPER_SCORE) -> dict:
     """Full live flow. Returns everything the evaluator needs, not just the text."""
     out = {"queries": [], "papers": [], "results": [], "blocks": [],

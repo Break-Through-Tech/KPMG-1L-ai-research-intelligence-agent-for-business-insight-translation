@@ -92,7 +92,7 @@ Before installing, ensure you have the following tools installed:
 python evaluate.py --no-judge --limit 10    # quick check (~1 min)
 python evaluate.py --no-judge               # all 75, retrieval + refusal + format checks (~5 min)
 python evaluate.py                          # adds the LLM judge: faithfulness, relevance, business usefulness (~10-15 min)
-python evaluate.py --mode live --days 100   # real arXiv flow instead of the fixed data/ papers
+python evaluate.py --mode live               # real arXiv flow (last 180 days) instead of the fixed data/ papers
 ```
 
 - **Corpus mode (default)** uses the 5 PDFs in `data/`, so results are repeatable. Use it to compare changes.
