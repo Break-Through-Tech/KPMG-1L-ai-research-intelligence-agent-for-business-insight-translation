@@ -1,20 +1,19 @@
-from ingestion.pdf_parser import extract_all_pdfs
-from ingestion.chunker import chunk_documents
-from rag.rag_pipeline import store_documents, retrieve_document
-import json
+from rag.chain import respond_to_query
 
 
-documents = extract_all_pdfs('data')
-print("✅ Extracted all documents")
 
-chunks = chunk_documents(documents)
-print("✅ Completed Chunking")
-print(type(chunks))
+# # Response all at once
+# response = rag_chain.invoke(input("Enter Query: "))
+# print(response)
 
-print(len(chunks))
+# Streamed response
+for chunk in respond_to_query(input("Enter Query: ")):
 
-# Only run when storing new documents
-#store_documents(chunks)
-result = retrieve_document(query=input("Enter Query: "), k=1)
+    if chunk["type"] == "status":
+        print(f"💭 {chunk['message']}")
 
-print(json.dumps(result[0][0].metadata, indent=4))
+    elif chunk["type"] == "chunk":
+        print(chunk["content"], end="", flush=True)
+
+    elif chunk["type"] == "done":
+        print("\n✅ All done!")

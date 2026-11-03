@@ -16,6 +16,7 @@ EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 COLLECTION_NAME = "sample_papers"
 
 # Instantiates Embedding Model
+@lru_cache(maxsize=1)
 def get_embedding_client() -> HuggingFaceEmbeddings:
     return HuggingFaceEmbeddings(
         model_name=EMBEDDING_MODEL_NAME,
@@ -71,12 +72,18 @@ def get_vector_store() -> Chroma:
     )
 
 
-def retrieve_document(query: str, k: int=1):
+def retrieve_document(query: str, k: int=1, filter: dict | None = None):
     vector_store = get_vector_store()
 
     return vector_store.similarity_search_with_relevance_scores(
         query=query,
-        k=k
+        k=k,
+        filter=filter
     )
 
-
+def paper_is_stored(document_id: str) -> bool:
+    try:
+        found = get_vector_store().get(where={"document_id": document_id}, limit=1)
+        return bool(found["ids"])
+    except Exception:   # no DB or collection yet
+        return False

@@ -1,0 +1,86 @@
+import os
+from langchain_core.documents import Document
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
+from dotenv import load_dotenv
+from pathlib import Path
+from functools import lru_cache
+import time
+
+
+load_dotenv()  # Finds and loads API Key
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PERSIST_DIR = PROJECT_ROOT / "chroma_db"
+EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+COLLECTION_NAME = "sample_papers"
+
+# Instantiates Embedding Model
+@lru_cache(maxsize=1)
+def get_embedding_client() -> HuggingFaceEmbeddings:
+    return HuggingFaceEmbeddings(
+        model_name=EMBEDDING_MODEL_NAME,
+        model_kwargs = {
+            "device": "cpu"
+        },
+        encode_kwargs={
+            "batch_size": 32,
+            "normalize_embeddings": True,
+        },
+        show_progress = True
+    )
+
+def store_documents(documents: list[Document]) -> Chroma:
+    embeddings = get_embedding_client()
+
+    vector_store = Chroma(
+        collection_name=COLLECTION_NAME,
+        embedding_function=embeddings,
+        persist_directory = PERSIST_DIR
+    )
+
+    batch_size = 128
+
+    for start in range(0, len(documents), batch_size):
+        batch = documents[start : start+batch_size]
+
+        vector_store.add_documents(batch)
+
+        print(
+            f"Stored {start+len(batch)}"
+            f"of {len(documents)} chunks"
+        )
+
+    return vector_store
+
+
+# Cached so repeated queries reuse one embedding model and Chroma client
+@lru_cache(maxsize=1)
+def get_vector_store() -> Chroma:
+    if not PERSIST_DIR.exists():
+        raise FileNotFoundError(
+            "Vector database not found. "
+            "Run store_documents() first."
+        )
+
+    return Chroma(
+        collection_name=COLLECTION_NAME,
+        embedding_function = get_embedding_client(),
+        persist_directory = PERSIST_DIR,
+        create_collection_if_not_exists=False,
+        relevance_score_fn=lambda distance: 1.0 - (distance / 2.0)
+    )
+
+
+def get_retriever(k: int=1):
+    vector_store = get_vector_store()
+
+    return vector_store.as_retriever(search_kwargs={"k": k})
+
+def paper_is_stored(document_id: str) -> bool:
+    try:
+        found = get_vector_store().get(where={"document_id": document_id}, limit=1)
+        return bool(found["ids"])
+    except Exception:   # no DB or collection yet
+        return False
+
