@@ -20,6 +20,7 @@
   color-scheme: light dark;
   color: var(--text);
   background: var(--bg);
+  background-color: #e8e8ff;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
