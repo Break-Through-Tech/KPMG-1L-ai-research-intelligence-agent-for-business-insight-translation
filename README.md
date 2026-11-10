@@ -1,29 +1,19 @@
-# AI Studio Challenge Project Title
-
-> 💡 **Note for the team:** This is just a template. Update the above title with your AI Studio Challenge Project name. Remove all guidance notes and example text in this template and populate this README with your own content. You can work on this README throughout AI Studio, and get feedback from your AI Studio Coach and Challenge Advisor before finalizing it.  
-
----
+# Krystal - your 
 
 ### 👥 **Team Members**
 
-**Example:**
-
 | Name             | GitHub Handle | Contribution                                                             |
 |------------------|---------------|--------------------------------------------------------------------------|
-| Brando Budhan    | @Bran7astic  | WIP            |
-| Arushi Agarwal   | @arushi-a1    | WIP  |
-| Michelle Hong     | @seashello  | WIP                 |
+| Brando Budhan    | @Bran7astic  | Ingestion, Frontend             |
+| Arushi Agarwal   | @arushi-a1    | Validation  |
+| Michelle Hong     | @seashello  | Retrieval                |
 
 ---
 
 ## 🎯 **Project Highlights**
 
-**Example:**
-
-- Developed a machine learning model using `[model type/technique]` to address `[challenge project task]`.
-- Achieved `[key metric or result]`, demonstrating `[value or impact]` for `[host company]`.
-- Generated actionable insights to inform business decisions at `[host company or stakeholders]`.
-- Implemented `[specific methodology]` to address industry constraints or expectations.
+- Developed a Retrieval Augmented Generation (RAG) chatbot, turning `advanced AI Research into relevant business insights` for `KPMG`.
+- Locally-ran application and easy-to-use interface for any user.
 
 ---
 
@@ -82,65 +72,43 @@ Before installing, ensure you have the following tools installed:
 
 ## 🏗️ **Project Overview**
 
-**Describe:**
-
-- How this project is connected to the Break Through Tech AI Program
-- Your AI Studio host company and the project objective and scope
-- The real-world significance of the problem and the potential impact of your work
+- KPMG is a global leader in audit, tax, and advisory services, providing insights and expertise to a diverse clientele across various industries and countries
+- With new research published every day, there is new information that can be useful and applied to any setting. However, with so much information, it is difficult to ingest everything at scale.
+- This project enables efficiently monitoring and operationalizing the rapidly growing volume of AI research within a business setting. Turning technical knowledge into tangible solutions for non-technical leaders is extremely valuable.
 
 ---
 
 ## 📊 **Data Exploration**
 
-**You might consider describing the following (as applicable):**
-
-* The dataset(s) used: origin, format, size, type of data
-* Data exploration and preprocessing approaches
-* Insights from your Exploratory Data Analysis (EDA)
-* Challenges and assumptions when working with the dataset(s)
-
-**Potential visualizations to include:**
-
-* Plots, charts, heatmaps, feature visualizations, sample dataset images
+* ArXiv is an open-source archive for millions of research papers. Hundreds of new papers are added every day in the growing field of Artificial Intelligence, which contains a
+* include a visual (either data visualization about how much AI research there is / why this is important) 
 
 ---
 
-## 🧠 **Model Development**
+## 🧠 **Rag Process**
 
-**You might consider describing the following (as applicable):**
-
-* Model(s) used (e.g., CNN with transfer learning, regression models)
-* Feature selection and Hyperparameter tuning strategies
-* Training setup (e.g., % of data for training/validation, evaluation metric, baseline performance)
-
+* Include a chart about what RAG is and how our app works
+* Query --> search for relevant papers directly from ArXiv --> store paper locally --> choose 1 paper if it reaches threshold --> summarize paper
 
 ---
 
 ## 📈 **Results & Key Findings**
 
-**You might consider describing the following (as applicable):**
-
-* Performance metrics (e.g., Accuracy, F1 score, RMSE)
-* How your model performed
-* Insights from evaluating model fairness
-
-**Potential visualizations to include:**
-
-* Confusion matrix, precision-recall curve, feature importance plot, prediction distribution, outputs from fairness or explainability tools
+* include runtime (how long it takes for a new + existing query)
+* how many calls we can make with our key
+* etc.
 
 ---
 
 ## 🚀 **Next Steps**
 
-**You might consider addressing the following (as applicable):**
-
 * What are some of the limitations of your model?
-* What would you do differently with more time/resources?
-* What additional datasets or techniques would you explore?
+* deploying
+* new ideas
 
 ---
 
-## 📝 **License**
+## 📝 **License** (ask Deanna!)
 
 Specify how your project can be used by others. Choose an appropriate license and link it here (e.g., MIT, Apache 2.0). Make sure your Challenge Advisor approves of the selected license type. 
 
@@ -149,12 +117,6 @@ This project is licensed under the MIT License.
 
 ---
 
-## 📄 **References** (Optional but encouraged)
-
-Cite relevant papers, articles, or resources that supported your project.
-
----
-
 ## 🙏 **Acknowledgements** (Optional but encouraged)
 
-Thank your Challenge Advisor, host company representatives, TA, and others who supported your project.
+Thank you to Deanna DiMonte and Lauren Fang for their generous help and support!
