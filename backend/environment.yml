@@ -23,3 +23,6 @@ dependencies:
   - python-dotenv
   - langchain-core
   - langchain-google-genai
+  - uvicorn
+  - fastapi
+

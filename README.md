@@ -40,7 +40,7 @@ Before installing, ensure you have the following tools installed:
     cd KPMG-1L-ai-research-intelligence-agent-for-business-insight-translation
     ```
 
-2. Create and activate Conda environment from environment.yml by running 
+2. In the `backend/` directory, create and activate Conda environment from environment.yml by running 
     ```
     conda env create -f environment.yml
     ```
@@ -54,7 +54,7 @@ Before installing, ensure you have the following tools installed:
     conda install <package name>
     conda env export --from-history > environment.yml
     ```
-4. Everytime you pull new code, update your conda environment by running
+4. Everytime you pull new code to the backend, update your conda environment by running
     ```
     conda activate KPMG_1L
 
@@ -69,6 +69,29 @@ Before installing, ensure you have the following tools installed:
     `KPMG_1L (Python 3.14.7)`
 
 ---
+## 💻 Running the Backend
+
+While in the `backend/` directory, to start the server, run: 
+
+```
+uvicorn main:app --reload
+```
+
+As a sample query, you can run in a separate terminal:
+```
+curl -N -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is the Pandora's Box Problem?"}'
+```
+
+## 🖼️ Running the Frontend
+
+While in the `frontend/` directory, run
+
+```
+npm install
+npm run dev
+```
 
 ## 🏗️ **Project Overview**
 
