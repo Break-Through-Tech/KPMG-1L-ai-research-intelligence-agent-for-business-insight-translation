@@ -93,7 +93,7 @@ export default function Chat() {
 						elevation={0}
 						sx={{
 							ml: "auto",
-							width: 100,
+							width: "fit-content",
 							backgroundColor: "secondary.main",
 							p: 3,
 							mb: 2,
