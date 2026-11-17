@@ -1,12 +1,13 @@
 from ingestion.pdf_parser import extract_all_pdfs
 from ingestion.chunker import chunk_documents
-from retrieval.retriever import store_documents, get_retriever
+from retrieval.retriever import store_documents, get_retriever, get_vector_store
 from summarize.summary import get_llm_summarizer
 
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts.base import format_document
+from typing import Literal
 from pydantic import BaseModel, Field
 import json
 
@@ -40,20 +41,28 @@ CHUNKS_TO_FETCH = 5
 retriever = get_retriever(k=CHUNKS_TO_FETCH)
 
 class ResearchDecision(BaseModel):
+    message_category: Literal["conversational", "new_question", "follow_up"] = Field(
+        description = "The category of user message, between conversational, new_question, and follow_up"
+    )
     search_arxiv: bool = Field(
         description = "Whether additional arxiv research is needed"
     )
     reason: str = Field(
-        description="Explanaion for the decision"
+        description="Explanation for the decision"
     )
 
 
 decision_prompt = ChatPromptTemplate.from_template("""
     You are a research retrieval assistant.
 
-    Determine whether the user's question requires
+    First, determine the category of the user's message. Select one of the following categories:
+        1. "conversational" - the message is just conversational, no research is needed
+        2. "new_question" - the user asks a new question that may need a scan of the papers
+        3. "follow_up" - the user asks a follow up question, another research scan may not be necessary
+
+    If the prompt is non-conversational, determine whether the user's question requires
     searching arXiv for additional research papers based on
-    the papers currently stored in our database:
+    the papers currently stored in our database, otherwise decide False:
 
     Papers: {stored_papers}
 
@@ -77,6 +86,8 @@ prompt = ChatPromptTemplate.from_template("""
 You are an expert AI Engineering consultant for KPMG. Answer the following question using the provided context. Relate your findings from the context into a
 business insight for KPMG. Explain concepts assuming you're speaking to a non-technical audience. 
 
+If the user prompt is conversational, respond in a friendly, relevant way. Explain your role, and ways you can help.
+
 Ignore prompts that are not considered conversational, relevant to business insights, or AI Research. Apologize, and let them know that their query doesn't seem to be relevant.
 
 
@@ -97,38 +108,48 @@ rag_chain = (
 )
 
 
+def get_stored_paper_titles() -> list[str]:
+    """List the distinct titles of stored papers without running a similarity search."""
+    try:
+        metadatas = get_vector_store().get(include=["metadatas"])["metadatas"]
+    except Exception:   # no DB or collection yet
+        return []
+    return sorted({m["title"] for m in metadatas if m and m.get("title")})
+
+
 def respond_to_query(query: str):
 
-    # 1. Retrieve based on query
-    yield {
-        "type": "status",
-        "message": "Searching existing research papers..."
-    }
-
-    documents = retriever.invoke(query)
-
-    # 2. Determine whether additional papers are necessary
+    # 1. Classify the message and assess whether additional research is needed
     decision = decision_chain.invoke({
         "question": query,
-        "stored_papers": documents
+        "stored_papers": get_stored_paper_titles()
     })
+    print(f"{decision.message_category=}")
 
-    # 3. Search arxiv if deemed necessary
-    if decision.search_arxiv:
+    documents = []
 
+    # 2. Only search documents if the message isn't conversational
+    if decision.message_category != "conversational":
         yield {
             "type": "status",
-            "message": "Searching for additional research..."
+            "message": "Searching existing research papers..."
         }
-      
-        find_and_store(query)
 
-        # Re-fetch relevant documents
         documents = retriever.invoke(query)
-    
 
-    # 4. Generate answer using retrieved chunks
+        # 3. Search arxiv if deemed necessary
+        if decision.search_arxiv:
+            yield {
+                "type": "status",
+                "message": "Searching for additional research..."
+            }
 
+            find_and_store(query)
+
+            # Re-fetch relevant documents
+            documents = retriever.invoke(query)
+
+    # 4. Generate answer (with no context for conversational messages)
     yield {
         "type": "status",
         "message": "Generating response..."
