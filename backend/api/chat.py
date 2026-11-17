@@ -13,7 +13,7 @@ class QueryRequest(BaseModel):
 
 def event_stream(query: str):
     for event in respond_to_query(query):
-        yield f"data: {json.dumps(event)}\n\n"
+        yield f"{json.dumps(event)}\n\n"
 
 @router.post('/chat')
 def chat(request: QueryRequest):

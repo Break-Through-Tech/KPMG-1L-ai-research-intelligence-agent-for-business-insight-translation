@@ -15,6 +15,7 @@ export default function Chat() {
 	const [input, setInput] = useState("");
 	const [userMessages, setUserMessages] = useState([]);
 	const [responses, setResponses] = useState([]);
+    const [currResponse, setCurrResponse] = useState("")
 	const [status, setStatus] = useState("");
 
 	// Make request to Chat Backend
@@ -58,11 +59,20 @@ export default function Chat() {
 
 					const chunk = decoder.decode(value, { stream: !done });
 
-					setResponses((prev) => [...prev, chunk]);
+                    const event = JSON.parse(chunk)
+
+                    if (event.type === "chunk") {
+                        setCurrResponse(prev => prev+event.content);
+                    } else if (event.type == "status") {
+                        setStatus(event.message)
+                        console.log(event.message)
+                    }
 				}
 			} catch (err) {
 				console.error(err);
-			}
+			} finally {
+                setStatus("")
+            }
 		};
 
 		sendMessage();
@@ -105,9 +115,11 @@ export default function Chat() {
 					</Paper>
 				))}
 
-				{responses.map((msg, index) => (
-					<Typography key={index}>{msg}</Typography>
-				))}
+				{status && 
+                    <Typography>{status}</Typography>
+                }
+
+                <Typography>{currResponse}</Typography>
 			</Box>
 
 			<Box
