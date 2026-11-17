@@ -9,10 +9,13 @@ const theme = createTheme({
 			// Using an imported MUI color object automatically calculates .light and .dark shades
 			main: "#00338D",
 		},
-    secondary: {
-      main: "#005EB8"
-    }
+		secondary: {
+			main: "#005EB8"
+		}
 	},
+	typography: {
+		fontFamily: '"Open Sans", "Roboto", "Helvetica", "Arial", sans-serif'
+	}
 });
 
 function App() {

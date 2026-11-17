@@ -9,13 +9,17 @@ import {
 	Toolbar,
 	Typography,
 } from "@mui/material";
+import MuiMarkdown from "mui-markdown";
 import { useEffect, useState } from "react";
+
+type Message = {
+	role: "user" | "assistant";
+	content: string;
+};
 
 export default function Chat() {
 	const [input, setInput] = useState("");
-	const [userMessages, setUserMessages] = useState([]);
-	const [responses, setResponses] = useState([]);
-    const [currResponse, setCurrResponse] = useState("")
+	const [messages, setMessages] = useState<Message[]>([]);
 	const [status, setStatus] = useState("");
 
 	// Make request to Chat Backend
@@ -38,6 +42,7 @@ export default function Chat() {
 					},
 					body: JSON.stringify({
 						query: input,
+                        history: messages
 					}),
 				});
 
@@ -46,7 +51,11 @@ export default function Chat() {
 				}
 
 				// Add user message
-				setUserMessages((prev) => [...prev, query]);
+				setMessages((prev) => [
+						...prev,
+						{ role: "user", content: query },
+						{ role: "assistant", content: "" },
+					]);
 
 				// Parse stream response
 				const reader = response.body.getReader();
@@ -62,7 +71,15 @@ export default function Chat() {
                     const event = JSON.parse(chunk)
 
                     if (event.type === "chunk") {
-                        setCurrResponse(prev => prev+event.content);
+                        setMessages((prev) => {
+                            const updated = [...prev];
+                            const last = updated[updated.length - 1];
+                            updated[updated.length - 1] = {
+                                ...last,
+                                content: last.content + event.content,
+                            };
+                            return updated;
+                        });
                     } else if (event.type == "status") {
                         setStatus(event.message)
                         console.log(event.message)
@@ -77,6 +94,10 @@ export default function Chat() {
 
 		sendMessage();
 	};
+
+    useEffect(() => {
+        console.log(messages)
+    }, [messages])
 
 	return (
 		<Stack sx={{ minHeight: "100dvh" }}>
@@ -97,29 +118,41 @@ export default function Chat() {
 					pb: "120px", // Space for the fixed input
 				}}
 			>
-				{userMessages.map((msg, index) => (
-					<Paper
-						key={index}
-						elevation={0}
-						sx={{
-							ml: "auto",
-							width: "fit-content",
-							backgroundColor: "secondary.main",
-							p: 3,
-							mb: 2,
-						}}
-					>
-						<Typography align="left" sx={{ color: "white" }}>
-							{msg}
-						</Typography>
-					</Paper>
-				))}
+				{messages.map((msg, index) =>
+					msg.role === "user" ? (
+						<Paper
+							key={index}
+							elevation={0}
+							sx={{
+								ml: "auto",
+								width: "fit-content",
+								backgroundColor: "secondary.main",
+								p: 3,
+								mb: 2,
+							}}
+						>
+							<Typography align="left" sx={{ color: "white" }}>
+								{msg.content}
+							</Typography>
+						</Paper>
+					) : (
+						// <Typography key={index} align="left" sx={{ mb: 2 }}>
+						// 	{msg.content}
+						// </Typography>
+                        <Box sx = {{
+                            textAlign: 'left',
+                            width: '100%'
+                        }}>
+                            <MuiMarkdown copiable>
+                                {msg.content}
+                            </MuiMarkdown>
+                        </Box>
+					),
+				)}
 
-				{status && 
+				{status &&
                     <Typography>{status}</Typography>
                 }
-
-                <Typography>{currResponse}</Typography>
 			</Box>
 
 			<Box

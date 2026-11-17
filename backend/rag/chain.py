@@ -66,6 +66,9 @@ decision_prompt = ChatPromptTemplate.from_template("""
 
     Papers: {stored_papers}
 
+    Conversation so far:
+    {history}
+
     Question: {question}
 """)
 
@@ -90,6 +93,9 @@ If the user prompt is conversational, respond in a friendly, relevant way. Expla
 
 Ignore prompts that are not considered conversational, relevant to business insights, or AI Research. Apologize, and let them know that their query doesn't seem to be relevant.
 
+
+Conversation so far:
+{history}
 
 Context: 
 {context}
@@ -117,11 +123,34 @@ def get_stored_paper_titles() -> list[str]:
     return sorted({m["title"] for m in metadatas if m and m.get("title")})
 
 
-def respond_to_query(query: str):
+def format_history(history: list) -> str:
+    """Render prior conversation messages (oldest first) for use in prompts.
+
+    Each message is expected to be an object like {"role": ..., "content": ...}
+    (as sent by the frontend); plain strings are also accepted.
+    """
+    if not history:
+        return "(no previous messages)"
+
+    lines = []
+    for msg in history:
+        if isinstance(msg, dict):
+            role = msg.get("role", "unknown")
+            content = msg.get("content", "")
+            lines.append(f"{role}: {content}")
+        else:
+            lines.append(str(msg))
+    return "\n".join(lines)
+
+
+def respond_to_query(query: str, history: list):
+    history = format_history(history)
+    print(history)
 
     # 1. Classify the message and assess whether additional research is needed
     decision = decision_chain.invoke({
         "question": query,
+        "history": history,
         "stored_papers": get_stored_paper_titles()
     })
     print(f"{decision.message_category=}")
@@ -157,6 +186,7 @@ def respond_to_query(query: str):
 
     for chunk in rag_chain.stream({
         "question": query,
+        "history": history,
         "context": documents
     }):
         yield {

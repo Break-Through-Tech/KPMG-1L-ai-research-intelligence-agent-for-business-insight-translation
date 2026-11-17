@@ -153,7 +153,7 @@ def find_and_store(query: str) -> Paper:
     ranked = rank_papers(query, candidates, get_embedding_client())
     if not ranked or ranked[0][1] < MIN_SCORE:
         print(f"No sufficiently relevant arXiv paper found ({len(candidates)} candidates screened).")
-        raise SystemExit
+        return
     paper, score = ranked[0]
     print(f"✅ Selected: {paper.title} (arXiv:{paper.arxiv_id}, similarity {score:.2f}, "
         f"picked from {len(candidates)} candidates)")
