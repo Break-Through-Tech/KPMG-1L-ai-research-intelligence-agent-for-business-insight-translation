@@ -27,8 +27,8 @@ from summarize.summary import answer_with_summary
 
 # print(len(chunks))
 
-# Only run when storing new documents
-#store_documents(chunks)
+# # Only run when storing new documents
+# store_documents(chunks)
 
 """
 === Decision LLM === 
