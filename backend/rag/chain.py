@@ -179,7 +179,7 @@ def format_history(history: list) -> str:
     return "\n".join(lines)
 
 
-INTERRUPTED_MESSAGE = "Incomplete—response interrupted"
+INTERRUPTED_MESSAGE = "AI is busy, please retry shortly."
 
 
 def respond_to_query(query: str, history: list):

@@ -9,7 +9,7 @@ load_dotenv()
 client = genai.Client(api_key=os.getenv("API_KEY"))
 SUMMARY_MODEL = "gemini-3.5-flash-lite"
 DECISION_MODEL = "gemini-decision-1"
-FALLBACK_MODEL = os.getenv("FALLBACK_MODEL", "gemini-3.8-flash")
+FALLBACK_MODEL = os.getenv("FALLBACK_MODEL", "gemma-4-31b-it")
 
 _paper_cache = {}  # source path -> full text
 

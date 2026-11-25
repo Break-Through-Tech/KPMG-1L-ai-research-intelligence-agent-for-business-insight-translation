@@ -18,7 +18,7 @@ type Message = {
 	content: string;
 };
 
-const INTERRUPTED_MESSAGE = "Incomplete—response interrupted";
+const INTERRUPTED_MESSAGE = "AI is busy, please retry shortly";
 
 export default function Chat() {
 	const [input, setInput] = useState("");
