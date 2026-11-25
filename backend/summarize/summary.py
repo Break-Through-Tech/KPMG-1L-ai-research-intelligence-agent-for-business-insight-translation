@@ -2,11 +2,14 @@ import os
 from dotenv import load_dotenv
 from google import genai
 from ingestion.pdf_parser import extract_pdf
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenAIClassifier
+
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv("API_KEY"))
-MODEL = "gemini-3.5-flash-lite"
+SUMMARY_MODEL = "gemini-3.5-flash-lite"
+DECISION_MODEL = "gemini-decision-1"
+FALLBACK_MODEL = os.getenv("FALLBACK_MODEL", "gemini-3.8-flash")
 
 _paper_cache = {}  # source path -> full text
 
@@ -45,13 +48,19 @@ Respond in two parts:
    user's query, and add one useful related point from elsewhere in the paper
    that helps answer it. Base everything only on the text provided."""
 
-    response = client.models.generate_content(model=MODEL, contents=prompt)
+    response = client.models.generate_content(model=SUMMARY_MODEL, contents=prompt)
     return response.text
 
 
-def get_llm_summarizer(model=MODEL):
+def get_llm_summarizer(model=SUMMARY_MODEL):
     return ChatGoogleGenerativeAI(
         model=model,
         temperature=0,
-        api_key = os.getenv("API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY")
+    )
+
+def get_llm_decider(model=DECISION_MODEL):
+    return GoogleGenAIClassifier(
+        model=model,
+        api_key = os.getenv("GEMINI_API_KEY")
     )

@@ -10,94 +10,111 @@ import {
 	Typography,
 } from "@mui/material";
 import MuiMarkdown from "mui-markdown";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import type React from "react";
 
 type Message = {
 	role: "user" | "assistant";
 	content: string;
 };
 
+const INTERRUPTED_MESSAGE = "Incomplete—response interrupted";
+
 export default function Chat() {
 	const [input, setInput] = useState("");
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [status, setStatus] = useState("");
+	const [isStreaming, setIsStreaming] = useState(false);
+	const [failedQuery, setFailedQuery] = useState<{
+		query: string;
+		history: Message[];
+	} | null>(null);
 
-	// Make request to Chat Backend
-	const handleSend = (e) => {
-		e.preventDefault();
+	// Make request to Chat Backend. `history` is the conversation before this
+	// query; the user message and an empty assistant message are appended to it.
+	const sendQuery = async (query: string, history: Message[]) => {
+		setIsStreaming(true);
+		setFailedQuery(null);
+		setStatus("Connecting...");
+		setMessages([
+			...history,
+			{ role: "user", content: query },
+			{ role: "assistant", content: "" },
+		]);
 
-		const sendMessage = async () => {
-			const query = input.trim();
-			if (!query) return;
+		let interrupted = false;
 
-			setStatus("Connecting...");
-
-			try {
-				setInput("");
-
-				const response = await fetch("http://localhost:8000/api/chat", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						query: input,
-                        history: messages
-					}),
+		const handleEvent = (event: any) => {
+			if (event.type === "chunk") {
+				setMessages((prev) => {
+					const updated = [...prev];
+					const last = updated[updated.length - 1];
+					updated[updated.length - 1] = {
+						...last,
+						content: last.content + event.content,
+					};
+					return updated;
 				});
-
-				if (!response.ok || !response.body) {
-					throw new Error(`HTTP error, Status: ${response.status}`);
-				}
-
-				// Add user message
-				setMessages((prev) => [
-						...prev,
-						{ role: "user", content: query },
-						{ role: "assistant", content: "" },
-					]);
-
-				// Parse stream response
-				const reader = response.body.getReader();
-				const decoder = new TextDecoder();
-				let done = false;
-
-				while (!done) {
-					const { done: doneReading, value } = await reader.read();
-					done = doneReading;
-
-					const chunk = decoder.decode(value, { stream: !done });
-
-                    const event = JSON.parse(chunk)
-
-                    if (event.type === "chunk") {
-                        setMessages((prev) => {
-                            const updated = [...prev];
-                            const last = updated[updated.length - 1];
-                            updated[updated.length - 1] = {
-                                ...last,
-                                content: last.content + event.content,
-                            };
-                            return updated;
-                        });
-                    } else if (event.type == "status") {
-                        setStatus(event.message)
-                        console.log(event.message)
-                    }
-				}
-			} catch (err) {
-				console.error(err);
-			} finally {
-                setStatus("")
-            }
+			} else if (event.type === "status") {
+				setStatus(event.message);
+			} else if (event.type === "error") {
+				interrupted = true;
+			}
 		};
 
-		sendMessage();
+		try {
+			const response = await fetch("http://localhost:8000/api/chat", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ query, history }),
+			});
+
+			if (!response.ok || !response.body) {
+				throw new Error(`HTTP error, Status: ${response.status}`);
+			}
+
+			// Parse stream response (events are separated by blank lines)
+			const reader = response.body.getReader();
+			const decoder = new TextDecoder();
+			let buffer = "";
+			let done = false;
+
+			while (!done && !interrupted) {
+				const { done: doneReading, value } = await reader.read();
+				done = doneReading;
+				buffer += decoder.decode(value, { stream: !done });
+
+				const parts = buffer.split("\n\n");
+				buffer = parts.pop() ?? "";
+				for (const part of parts) {
+					if (part.trim()) handleEvent(JSON.parse(part));
+				}
+			}
+			if (buffer.trim() && !interrupted) handleEvent(JSON.parse(buffer));
+		} catch (err) {
+			console.error(err);
+			interrupted = true;
+		} finally {
+			setStatus("");
+			setIsStreaming(false);
+			if (interrupted) setFailedQuery({ query, history });
+		}
 	};
 
-    useEffect(() => {
-        console.log(messages)
-    }, [messages])
+	const handleSend = (e: React.FormEvent) => {
+		e.preventDefault();
+		const query = input.trim();
+		if (!query || isStreaming) return;
+		setInput("");
+		sendQuery(query, messages);
+	};
+
+	const handleRetry = () => {
+		if (!failedQuery || isStreaming) return;
+		sendQuery(failedQuery.query, failedQuery.history);
+	};
 
 	return (
 		<Stack sx={{ minHeight: "100dvh" }}>
@@ -150,9 +167,16 @@ export default function Chat() {
 					),
 				)}
 
-				{status &&
-                    <Typography>{status}</Typography>
-                }
+				{status && <Typography>{status}</Typography>}
+
+				{failedQuery && (
+					<Stack direction="row" spacing={2} alignItems="center">
+						<Typography color="error">{INTERRUPTED_MESSAGE}</Typography>
+						<Button variant="outlined" onClick={handleRetry}>
+							Retry
+						</Button>
+					</Stack>
+				)}
 			</Box>
 
 			<Box
@@ -168,7 +192,7 @@ export default function Chat() {
 					p: 2,
 					boxSizing: "border-box",
 					zIndex: 1100,
-                    bgcolor: "#e8e8ff"
+                    bgcolor: "#f5f5ff"
 				}}
 			>
 				<TextField
@@ -181,7 +205,7 @@ export default function Chat() {
                     }}
 				/>
 
-				<Button type="submit" variant="contained">
+				<Button type="submit" variant="contained" disabled={isStreaming}>
 					Send
 				</Button>
 			</Box>
